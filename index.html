@@ -1,0 +1,224 @@
+<h1>Markdown Syntax</h1>
+
+<h2>Introduction</h2>
+<p>This document is intended to move Markdown towards a standard syntax. 
+This document format is now widely implemented and deployed on the Web.  While the 
+<a href="http://daringfireball.net/projects/markdown/syntax">original document</a> (Ref. 1)
+by John Gruber defines much of what is currently supported by Markdown implementations, there are
+some aspects of that document that are ambiguous.  This document resolves these ambiguities
+mostly by choosing behavior that is followed by the majority of implementations.</p>
+
+<p>Please note that this document is incomplete, and is a work in progress.  Comments
+would be appreciated.</p>
+
+<h2>Definitions</h2>
+
+<p>The <dfn>whitespace characters</dfn> are U+000C, U+000D, U+0009, U+000A,
+and U+0020.</p>
+<p><dfn>Space</dfn> is the character U+0020.</p>
+<p><dfn>Tab</dfn> is the character U+0009.</p>
+<p>A <dfn>line break</dfn> is the character sequence U+000D U+000A
+(carriage return followed by line feed) or U+000D and U+000A standing alone.</p>
+<p><dfn>Lines</dfn> are separated by line breaks.</p>
+<p>A <dfn>blank line</dfn> is a line with no characters or a line with no other characters
+but whitespace characters.</p>
+<p>A <dfn>digit character</dfn> is a character in the range U+0030 to U+0039.</p>
+<p>A <dfn>non-ordinary line</dfn> is a line that doesn't start with:
+<ul>
+<li>">", "-",  "*", or "+" characters followed by space or tab;</li>
+<li>one or more "#" characters followed by space or tab; or</li>
+<li>one or more digit characters followed by "." and either space or tab.</li>
+</ul></p>
+<p>An <dfn>ordinary line</dfn> is a line other than a non-ordinary line.</p>
+<p>The <dfn>Base Document</dfn> is the original Markdown specification by John Gruber (Ref. 1).</p>
+
+<h2>Parser</h2>
+<p>A Markdown stream is parsed in two passes - line by line, then character by
+character.</p>
+
+<p>Read each line in the file:</p>
+<ul>
+<li>If the character consists of only space, tab, and "_" characters,
+and this is the first line or the line contains at least one space or tab character, replace the line
+with the HTML (Ref. 2) <code>hr</code> element.
+(See "Horizontal Rules" in the Base Document.)</li>
+<li>If the character consists of only space, tab, and "*" characters,
+and this is the first line or the line contains at least one space or tab character, replace the line
+with the HTML <code>hr</code> element.
+(See "Horizontal Rules" in the Base Document.)</li>
+<li>If the character consists of only space, tab, and "-" characters,
+and this is the first line or the line contains at least one space or tab character, replace the line
+with the HTML <code>hr</code> element.
+(See "Horizontal Rules" in the Base Document.)</li>
+<li>If the character consists of only "-" characters,
+and the preceding line is an ordinary line, process the preceding line
+as Markdown and replace both lines
+with the HTML <code>h2</code> element with the content equal
+to the Markdown result.  (See "Setext-style" in "Headers".)</li>
+<li>If the character consists of only "*" characters,
+and the preceding line is an ordinary line, process the preceding line
+as Markdown and replace both lines
+with the HTML <code>h1</code> element with the content equal
+to the Markdown result.  (See "Setext-style" in "Headers".)</li>
+</ul>
+
+<p>The result is then parsed in another pass using the following process:</p>
+<p>Read each character in the stream:</p>
+<ul>
+<li>If the character is "\", read the next character and output that character.</li>
+<li>If the character is ">", and this is the start of the line, 
+and the following character is space or tab, read to the end of the line.
+This is the first line of a blockquote sequence. Read the rest of the blockquote
+using the rules in the section "Blockquotes".</li>
+<li>If the character is "*" or "-", if this is the start of the line, read the rest of the line.</li>
+<li>If the character is "*" or "-", if this is the start of the line, 
+and the following character is space or tab, then this is a list item.</li>
+<li>If the character is "*" or "+" or "-", if this is the start of the line, 
+and the following character is space or tab, then this is a list item.</li>
+<li>Otherwise, if the character is "*" followed by two more "*" characters, read those
+extra 2 characters and output a strong-emphasis start tag.
+<p>
+ISSUE:  This is not yet complete.
+</p>
+</li>
+<li>Otherwise, if the character is "*" followed by another "*" character, read that
+extra character and output an emphasis start tag.
+<p>
+ISSUE:  This is not yet complete.
+</p>
+</li>
+<li>Otherwise, if the character is "&amp;", it indicates a possible character
+escape.  Read the rest of the character escape using the HTML5 rules.
+If the escape is a recognized character escape, output that escape as is.  Otherwise, 
+output the "&amp;" and reset the character pointer to just after the "&amp;".
+<p>
+NOTE: While implementations are split on handling unrecognized character
+escapes, the result is practically indistinguishable when the resulting HTML is
+rendered by modern browsers.
+</p>
+</li>
+<li>If the character is a digit character, if this is the start of the line, 
+and the following characters are 0 or more digit
+characters followed by space or tab, read to the end of the line.  See "???" under "???".
+<p>
+ISSUE:  This is not yet complete.
+</p>
+</li>
+<li>If the character is "#", if this is the start of the line, and the following characters are 0 or more "#"
+characters followed by space or tab, read to the end of the line.  See "Atx-style" under "Headers".</li>
+<li>If the character is "&lt;", it indicates a possible markup tag.  Read the rest
+of the tag using the HTML5 rules.<ul>
+<li>If the tag is a DOCTYPE declaration, output that tag as markup-escaped characters.</li>
+<li>If the tag is a comment tag, an end tag, or the start tag of a void element, output
+that tag.</li>
+<li>If the tag is the start tag of a non-void element, read the rest of the stream
+as HTML until the matching end tag of the non-void element is read.</li>
+<li>If the tag is a "valid e-mail address" according to HTML5 (see section 4.10.5.1.5 of ref. 2), enclosed in angle brackets, rather than a markup
+tag, output that tag as a hyperlink whose URI is "mailto:" followed by that email address,
+where every character is converted to a character reference, and 
+whose content is that email address where every character is
+converted to a character reference. (See "Automatic Links" in the Base Document.)</li>
+<li>If the tag is a well-formed URI (RFC3986, Ref. 3) enclosed in angle brackets, rather than a markup
+tag, output that tag as a hyperlink to that URI, whose content is the markup-escaped
+form of that URI. (See "Automatic Links" in the Base Document.)</li>
+<li>If the tag is not a valid tag, output that tag as markup-escaped characters.
+</li>
+</ul>
+</li>
+<li>Output the character as a markup-escaped character.</li>
+</ul>
+
+<h2>Headers</h2>
+
+<h3>Setext-style</h3>
+<p>Each "setext-style" header consists of an ordinary line (the text line)
+followed by a line starting with "=" or "-" (the header line) and consisting
+only of the same character.</p>
+<p>To get the content of an "setext-style" header:</p>
+<ul>
+<li>Remove leading and trailing whitespace from the text line.</li>
+<li>The text is processed as a Markdown paragraph.</li>
+</ul>
+<p>
+NOTE: Several implementations do not remove trailing whitespace.
+However, this is rarely semantically significant.
+</p>
+<p>If the header line starts with "=", the result is a first-level header whose content is
+the resulting text.</p>
+<p>If the header line starts with "-", the result is a second-level header whose content is
+the resulting text.</p>
+<p>After an "setext-style" header, the following lines are ignored until a line containing
+a non-whitespace character is reached.</p>
+
+<h3>Atx-style</h3>
+<p>Each "atx-style" header consists of a line of text that begins with any number of "#"
+characters followed by one or more whitespace characters.</p>
+<p>To get the content of an "atx-style" header:</p>
+<ul>
+<li>Let N be the number of "#" characters that begin the text.  
+Remove those characters.</li>
+<li>Remove leading and trailing whitespace from the text.</li>
+<li>Remove trailing "#" whitespace from the text.</li>
+<li>Remove trailing whitespace from the text.</li>
+<li>The result is an N-level header whose content is the text.</li>
+</ul>
+<p>
+NOTE: In HTML, only header levels 1 to 6 are supported.  An implementation
+may wish to set N to 6 if it would be greater than 6.
+</p>
+<p>
+NOTE: Some implementations add an ID to the N-level header based on its
+content.  Doing so is optional.
+</p>
+<p>After an "setext-style" header, the following lines are ignored until a line containing
+a non-whitespace character is reached.</p>
+<h2>Blockquotes</h2>
+<p>A blockquote consists of one or more consecutive blockquote lines.
+A blockquote line sequence:</p>
+<ul>
+<li>Begins with a line that starts with a ">" character.</li>
+<li>Ends when a line that doesn't start with a ">" character
+and isn't a blank line or an ordinary line is reached.</li>
+</ul>
+<p>
+ISSUE: Implementations are split on whether an "atx-style" header line ends
+a block sequence.  This is an issue for discussion.
+</p>
+<p>
+NOTE: Many implementations end the blockquote upon reaching an empty line.
+The above definition matches the behavior of the majority of implementations.
+</p>
+<p>To get the content of a blockquote from a blockquote line sequence:</p>
+<ul>
+<li>Remove the leading ">" character from all lines in the text
+that begin with that character.</li>
+<li>Remove leading and trailing whitespace from each line.</li>
+<li>The text is recursively processed as Markdown; as a result, among
+other things, nested blockquotes are allowed.</li>
+<li>The result is a blockquote whose content is the processed text.</li>
+</ul>
+<h2>Lists</h2>
+<p>To be done.</p>
+<h2>Links</h2>
+<p>To be done.</p>
+
+<h2>References</h2>
+<p>Ref. 1. Gruber, J. "Markdown Syntax Documentation".  Daring Fireball, 
+<a href="http://daringfireball.net/projects/markdown/syntax">http://daringfireball.net/projects/markdown/syntax</a>.</p>
+<p>Ref. 2. "HTML". WHATWG, 
+<a href="http://www.whatwg.org/html">http://www.whatwg.org/html</a>.</p>
+<p>Ref. 3. Berners-Lee, T. et al. "Uniform Resource Identifier (URI): Generic Syntax". STD 66, January 2005.</p>
+<h2>
+Author
+</h2>
+<p>
+Peter Occil (poccil14 at gmail dot com)
+</p>
+<p>
+My <a href='http://peteroupc.github.io/CBOR/'>CBOR home page</a>.
+</p>
+<p>
+Any copyright to this specification is released to the Public Domain. <a href='http://creativecommons.org/publicdomain/zero/1.0/'>http://creativecommons.org/publicdomain/zero/1.0/</a>
+</p>
+</body></html>
+
