@@ -40,7 +40,7 @@ character.</p>
 <p>Read each line in the file:</p>
 <ul>
 <li>If the line doesn't start with four or more whitespace characters:<ul>
-<li>If the character consists of only space, tab, and "_" characters, replace the line
+<li>If the line consists of only space, tab, and "_" characters, replace the line
 with the HTML (Ref. 2) <code>hr</code> element.
 (See "Horizontal Rules" in the Base Document.)</li>
 <li>If the line consists of only space, tab, and "*" characters,
@@ -53,16 +53,12 @@ with the HTML <code>hr</code> element.
 (See "Horizontal Rules" in the Base Document.)</li>
 </ul>
 </li>
-<li>If the line consists of only "-" characters,
+<li>If the line consists of only "-" characters or only "*" characters,
 and the preceding line is an ordinary line, process the preceding line
 as Markdown and replace both lines
 with the HTML <code>h2</code> element with the content equal
-to the Markdown result.  (See "Setext-style" in "Headers".)</li>
-<li>If the line consists of only "*" characters,
-and the preceding line is an ordinary line, process the preceding line
-as Markdown and replace both lines
-with the HTML <code>h1</code> element with the content equal
-to the Markdown result.  (See "Setext-style" in "Headers".)</li>
+to the Markdown result (except that the paragraph is not implicitly wrapped in a "&lt;p>" element).  
+(See "Setext-style" in "Headers".)</li>
 </ul>
 
 <p>The result is then parsed in another pass using the following process:</p>
@@ -90,7 +86,20 @@ extra character and output an emphasis start tag.
 ISSUE:  This is not yet complete.
 </p>
 </li>
-<li>Otherwise, if the character is "&amp;", it indicates a possible character
+<li>If the character is "`" followed by another "`" ...
+<p>
+ISSUE:  This is not yet complete.
+</p>
+</li>
+<li>Otherwise, if the character is "`", 
+read the rest of the stream up to the next "`" character, if any.  If a second "`" character
+is found, output an HTML <code>code</code> element whose
+content consists of markup-escaped characters read after the first "`", 
+but not including the second "`".
+If no further "`" character was found, output a "`" character and reset the character pointer
+to just after the "`".
+</li>
+<li>If the character is "&amp;", it indicates a possible character
 escape.  Read the rest of the character escape using the HTML5 rules.
 If the escape is a recognized character escape, output that escape as is.  Otherwise, 
 output "&amp;amp;" and reset the character pointer to just after the "&amp;".
@@ -195,7 +204,8 @@ The above definition matches the behavior of the majority of implementations.
 <ul>
 <li>Remove the leading ">" character from all lines in the text
 that begin with that character.</li>
-<li>Remove leading and trailing whitespace from each line.</li>
+<li>Remove one leading whitespace character, if any, from each line.</li>
+<li>Remove trailing whitespace from each line.</li>
 <li>The text is recursively processed as Markdown; as a result, among
 other things, nested blockquotes are allowed.</li>
 <li>The result is a blockquote whose content is the processed text.</li>
