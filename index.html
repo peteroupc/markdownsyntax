@@ -23,7 +23,7 @@ and U+0020.</p>
 <p>A <dfn>blank line</dfn> is a line with no characters or a line with no other characters
 but whitespace characters.</p>
 <p>A <dfn>digit character</dfn> is a character in the range U+0030 to U+0039.</p>
-<p>A <dfn>non-ordinary line</dfn> is a line that doesn't start with:
+<p>A <dfn>non-ordinary line</dfn> is a line that starts with:
 <ul>
 <li>">", "-",  "*", or "+" characters followed by space or tab;</li>
 <li>one or more "#" characters followed by space or tab; or</li>
@@ -42,6 +42,7 @@ but whitespace characters.</p>
 </ul>
 
 <h2>Parser</h2>
+
 <p>A Markdown stream is parsed in two passes - line by line, then character by
 character.</p>
 
@@ -66,14 +67,15 @@ with the HTML <code>hr</code> element.
 and the preceding line is an ordinary line, process the preceding line
 as Markdown and replace both lines
 with the HTML <code>h2</code> element with the content equal
-to the Markdown result (except that the paragraph is not implicitly wrapped in a "&lt;p>" element).  
+to the Markdown result (except that the paragraph is not implicitly wrapped in an HTML <code>p</code> element).  
 (See "Setext-style" in "Headers".)</li>
 </ul>
 
 <p>The result is then parsed in another pass using the following process:</p>
 <p>Read each character in the stream:</p>
 <ul>
-<li>If the character is "\", read the next character and output that character.</li>
+<li>If the character is "\", read the next character and output that character
+as a markup-encoded character.</li>
 <li>If the character is ">", and this is the start of the line, 
 and the following character is space or tab, read to the end of the line.
 This is the first line of a blockquote sequence. Read the rest of the blockquote
@@ -92,6 +94,11 @@ ISSUE:  This is not yet complete.
 extra character and output an emphasis start tag.
 <p>
 ISSUE:  This is not yet complete.
+</p>
+</li>
+<li>Otherwise, if the character is "!" followed by a "[" character, ...
+<p>
+ISSUE:  To be defined.  See "Images" in the base document.
 </p>
 </li>
 <li>Otherwise, if the character is "`" followed by another "`"  character, 
@@ -137,10 +144,16 @@ that tag.</li>
 <li>If the tag is the start tag of a non-void element, read the rest of the stream
 as HTML until the matching end tag of the non-void element is read.</li>
 <li>If the tag is a "valid e-mail address" according to HTML5 (see section 4.10.5.1.5 of ref. 2), enclosed in angle brackets, rather than a markup
-tag, output that tag as a hyperlink whose URI is "mailto:" followed by that email address,
-where every character is converted to a character reference, and 
-whose content is that email address where every character is
-converted to a character reference. (See "Automatic Links" in the Base Document.)</li>
+tag, output that tag as a hyperlink whose URI is "mailto:" followed by that email address
+and  whose content is that email address in markup-escaped characters.
+(See "Automatic Links" in the Base Document.)
+<p>
+NOTE:  The Base Document suggests randomly converting each character to a
+character escape, a hex escape, or leaving each character alone.  Although this behavior
+is followed by a majority of known implementations, it is considered optional.  Moreover,
+such a random conversion makes the HTML output less deterministic.
+</p>
+</li>
 <li>If the tag is a well-formed URI (RFC3986, Ref. 3) enclosed in angle brackets, rather than a markup
 tag, output that tag as a hyperlink to that URI, whose content is the markup-escaped
 form of that URI. (See "Automatic Links" in the Base Document.)</li>
