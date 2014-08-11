@@ -32,6 +32,15 @@ but whitespace characters.</p>
 <p>An <dfn>ordinary line</dfn> is a line other than a non-ordinary line.</p>
 <p>The <dfn>Base Document</dfn> is the original Markdown specification by John Gruber (Ref. 1).</p>
 
+<h2>Markup Escaping</h2>
+
+<p>Characters are <dfn>markup-escaped</dfn> using the following method:</p>
+<ul>
+<li>Replace the "&amp;" character with "&amp;amp;".</li>
+<li>Replace the "&lt;" character with "&amp;lt;".</li>
+<li>Replace the ">" character with "&amp;gt;".</li>
+</ul>
+
 <h2>Parser</h2>
 <p>A Markdown stream is parsed in two passes - line by line, then character by
 character.</p>
@@ -69,7 +78,6 @@ to the Markdown result (except that the paragraph is not implicitly wrapped in a
 and the following character is space or tab, read to the end of the line.
 This is the first line of a blockquote sequence. Read the rest of the blockquote
 using the rules in the section "Blockquotes".</li>
-<li>If the character is "*" or "-", if this is the start of the line, read the rest of the line.</li>
 <li>If the character is "*" or "-", if this is the start of the line, 
 and the following character is space or tab, then this is a list item.</li>
 <li>If the character is "*" or "+" or "-", if this is the start of the line, 
@@ -86,18 +94,21 @@ extra character and output an emphasis start tag.
 ISSUE:  This is not yet complete.
 </p>
 </li>
-<li>If the character is "`" followed by another "`" ...
-<p>
-ISSUE:  This is not yet complete.
-</p>
+<li>Otherwise, if the character is "`" followed by another "`"  character, 
+read the rest of the stream up to and including the next "``" character sequence, if any.  If a second "``" character
+sequence is found, take the string of characters read after the first "``" sequence, 
+but not including the second "``" sequence, remove leading and trailing spaces and tabs from that string, and
+output an HTML <code>code</code> element whose content consists of that string as markup-escaped characters.
+If no further "``" sequence was found, output two "`" characters and reset the character pointer
+to just after the "``" sequence. (See "Code Spans" in the Base Document.)
 </li>
 <li>Otherwise, if the character is "`", 
-read the rest of the stream up to the next "`" character, if any.  If a second "`" character
+read the rest of the stream up to and including the next "`" character, if any.  If a second "`" character
 is found, output an HTML <code>code</code> element whose
 content consists of markup-escaped characters read after the first "`", 
 but not including the second "`".
 If no further "`" character was found, output a "`" character and reset the character pointer
-to just after the "`".
+to just after the "`". (See "Code Spans" in the Base Document.)
 </li>
 <li>If the character is "&amp;", it indicates a possible character
 escape.  Read the rest of the character escape using the HTML5 rules.
